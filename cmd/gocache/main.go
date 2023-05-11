@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	gocache "github.com/einsier/go-cache"
+	"github.com/einsier/go-cache"
 )
 
 var db = map[string]string{
@@ -15,8 +15,8 @@ var db = map[string]string{
 	"Sam":  "567",
 }
 
-func createGroup() *gocache.Group {
-	return gocache.NewGroup("scores", 2<<10, gocache.GetterFunc(
+func createGroup() *cache.Group {
+	return cache.NewGroup("scores", 2<<10, cache.GetterFunc(
 		func(key string) ([]byte, error) {
 			log.Println("[SlowDB] search key", key)
 			if v, ok := db[key]; ok {
@@ -27,35 +27,35 @@ func createGroup() *gocache.Group {
 		}))
 }
 
-func startCacheHTTPServer(port int, addrMap map[int]string, g *gocache.Group) {
+func startCacheHTTPServer(port int, addrMap map[int]string, g *cache.Group) {
 	var addrs []string
 	for _, v := range addrMap {
 		addrs = append(addrs, v)
 	}
 	addr := addrMap[port]
 
-	peers := gocache.NewHTTPPool(addr)
+	peers := cache.NewHTTPPool(addr)
 	peers.Set(addrs...)
 	g.RegisterPeers(peers)
-	log.Println("gocache is running at", addr)
+	log.Println("cache is running at", addr)
 	log.Fatal(http.ListenAndServe(addr[7:], peers))
 }
 
-func startCacheGRPCServer(port int, addrMap map[int]string, g *gocache.Group) {
+func startCacheGRPCServer(port int, addrMap map[int]string, g *cache.Group) {
 	var addrs []string
 	for _, v := range addrMap {
 		addrs = append(addrs, v)
 	}
 	addr := addrMap[port]
 
-	peers := gocache.NewGRPCPool(addr)
+	peers := cache.NewGRPCPool(addr)
 	peers.Set(addrs...)
 	g.RegisterPeers(peers)
-	log.Println("gocache is running at", addr)
+	log.Println("cache is running at", addr)
 	peers.Run()
 }
 
-func startAPIServer(apiAddr string, g *gocache.Group) {
+func startAPIServer(apiAddr string, g *cache.Group) {
 	http.Handle("/api", http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			key := r.URL.Query().Get("key")
@@ -73,7 +73,7 @@ func startAPIServer(apiAddr string, g *gocache.Group) {
 }
 
 var (
-	port = flag.Int("port", 8001, "Gocache server port")
+	port = flag.Int("port", 8001, "cache server port")
 	api  = flag.Bool("api", false, "Start a api server?")
 )
 

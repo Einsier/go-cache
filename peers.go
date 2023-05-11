@@ -1,4 +1,4 @@
-package gocache
+package cache
 
 import pb "github.com/einsier/go-cache/gocachepb"
 

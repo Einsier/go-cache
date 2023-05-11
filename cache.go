@@ -1,4 +1,4 @@
-package gocache
+package cache
 
 import (
 	"sync"
